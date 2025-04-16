@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard OneNote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chatbot-message.user {
+            border-radius: 18px 18px 0 18px;
+        }
+        
+        .chatbot-message.bot {
+            border-radius: 18px 18px 18px 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .chatbot-message {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .onenote-header {
+            background-color: #7719AA;
+        }
+
+        .onenote-accent {
+            background-color: #7719AA;
+        }
+
+        .onenote-accent:hover {
+            background-color: #5f1688;
+        }
+
+        /* Badge colors for each category */
+        .badge-slide {
+            background-color: #7719AA;
+            color: white;
+        }
+        
+        .badge-appunti {
+            background-color: #2E7D32;
+            color: white;
+        }
+        
+        .badge-esercizi {
+            background-color: #C62828;
+            color: white;
+        }
+        
+        .badge-riassunti {
+            background-color: #1565C0;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header Section -->
+    <header class="onenote-header text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-sticky-note text-2xl"></i>
+                <h1 class="text-2xl font-bold">Dashboard OneNote</h1>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-4">
+                <button id="darkModeToggle" class="p-2 rounded-full hover:bg-purple-700">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="relative">
+                    <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
+                        <span class="font-medium">Utente</span>
+                        <i class="fas fa-chevron-down text-sm"></i>
+                    </button>
+                    <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                        <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-purple-100">Profilo</a>
+                        <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-purple-100">Impostazioni</a>
+                        <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-purple-100">Esci</a>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="mobileMenuButton" class="md:hidden text-2xl focus:outline-none">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="flex flex-col md:flex-row container mx-auto px-4 py-6">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="hidden md:block w-full md:w-64 bg-white rounded-lg shadow-md p-4 mb-6 md:mb-0 md:mr-6 h-fit">
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Sezioni</h2>
+                <ul class="space-y-2">
+                    <li>
+                        <button class="subject-tab w-full text-left px-3 py-2 rounded-md bg-purple-100 text-purple-700 font-medium" data-subject="matematica">
+                            <i class="fas fa-square-root-alt mr-2"></i> Matematica
+                        </button>
+                    </li>
+                    <li>
+                        <button class="subject-tab w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700" data-subject="fisica">
+                            <i class="fas fa-atom mr-2"></i> Fisica
+                        </button>
+                    </li>
+                    <li>
+                        <button class="subject-tab w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700" data-subject="informatica">
+                            <i class="fas fa-laptop-code mr-2"></i> Informatica
+                        </button>
+                    </li>
+                    <li>
+                        <button class="subject-tab w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700" data-subject="chimica">
+                            <i class="fas fa-flask mr-2"></i> Chimica
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Filtri</h2>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="filter-slide" class="rounded text-purple-600 focus:ring-purple-500" checked>
+                        <label for="filter-slide" class="ml-2 text-gray-700">Slide</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="filter-appunti" class="rounded text-green-600 focus:ring-green-500" checked>
+                        <label for="filter-appunti" class="ml-2 text-gray-700">Appunti</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="filter-esercizi" class="rounded text-red-600 focus:ring-red-500" checked>
+                        <label for="filter-esercizi" class="ml-2 text-gray-700">Esercizi</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="filter-riassunti" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                        <label for="filter-riassunti" class="ml-2 text-gray-700">Riassunti</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Ultime attività</h2>
+                <div class="space-y-3">
+                    <div class="flex items-start">
+                        <div class="bg-purple-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-images text-purple-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Aggiunte nuove slide</p>
+                            <p class="text-xs text-gray-500">Matematica - 10 min fa</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-green-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-edit text-green-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Aggiornati appunti</p>
+                            <p class="text-xs text-gray-500">Fisica - 1 ora fa</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-blue-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-book text-blue-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Creato riassunto</p>
+                            <p class="text-xs text-gray-500">Chimica - 2 ore fa</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Subject Header -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h2 id="current-subject" class="text-2xl font-bold text-gray-800">Matematica</h2>
+                        <p class="text-gray-600">Note organizzate per sezione</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 flex space-x-3">
+                        <button class="px-4 py-2 onenote-accent text-white rounded-md hover:bg-purple-700 focus:outline-none">
+                            <i class="fas fa-plus mr-2"></i> Nuova Nota
+                        </button>
+                        <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none">
+                            <i class="fas fa-search mr-2"></i> Cerca
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Content Type Tabs -->
+                <div class="mt-6 border-b border-gray-200">
+                    <div class="flex space-x-4 overflow-x-auto pb-2">
+                        <button class="content-type-tab px-4 py-2 text-sm font-medium text-purple-600 border-b-2 border-purple-600 whitespace-nowrap" data-type="all">
+                            Tutti
+                        </button>
+                        <button class="content-type-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap" data-type="slide">
+                            Slide
+                        </button>
+                        <button class="content-type-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap" data-type="appunti">
+                            Appunti
+                        </button>
+                        <button class="content-type-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap" data-type="esercizi">
+                            Esercizi
+                        </button>
+                        <button class="content-type-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap" data-type="riassunti">
+                            Riassunti
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Summary Cards Grid -->
+            <div id="summary-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Slide Card -->
+                <div class="summary-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300" data-type="slide" data-subject="matematica">
+                    <div class="relative h-48 bg-gray-200 overflow-hidden">
+                        <img src="https://via.placeholder.com/600x400/7719AA/ffffff?text=Slide+Matematica" alt="Slide Matematica" class="w-full h-full object-cover">
+                        <div class="absolute top-2 right-2 badge-slide text-xs px-2 py-1 rounded-md">
+                            <i class="fas fa-images mr-1"></i> Slide
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Calcolo Differenziale</h3>
+                        <p class="text-gray-600 text-sm mb-4">Slide complete su limiti, derivate e loro applicazioni.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500"><i class="fas fa-calendar-alt mr-1"></i> 15 Ott 2023</span>
+                            <button class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                                <i class="fas fa-external-link-alt mr-1"></i> Apri
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Appunti Card -->
+                <div class="summary-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300" data-type="appunti" data-subject="matematica">
+                    <div class="relative h-48 bg-gray-100 overflow-hidden flex items-center justify-center">
+                        <i class="fas fa-edit text-5xl text-gray-400"></i>
+                        <div class="absolute top-2 right-2 badge-appunti text-xs px-2 py-1 rounded-md">
+                            <i class="fas fa-pen-fancy mr-1"></i> Appunti
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Serie Numeriche</h3>
+                        <p class="text-gray-600 text-sm mb-4">Appunti completi sulle serie numeriche: criteri di convergenza ed esempi.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500"><i class="fas fa-calendar-alt mr-1"></i> 12 Ott 2023</span>
+                            <button class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                                <i class="fas fa-external-link-alt mr-1"></i> Apri
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Esercizi Card -->
+                <div class="summary-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300" data-type="esercizi" data-subject="matematica">
+                    <div class="relative h-48 bg-gray-100 overflow-hidden flex items-center justify-center">
+                        <i class="fas fa-dumbbell text-5xl text-gray-400"></i>
+                        <div class="absolute top-2 right-2 badge-esercizi text-xs px-2 py-1 rounded-md">
+                            <i class="fas fa-tasks mr-1"></i> Esercizi
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Esercizi Integrali</h3>
+                        <p class="text-gray-600 text-sm mb-4">Raccolta di esercizi sugli integrali con soluzioni passo-passo.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500"><i class="fas fa-calendar-alt mr-1"></i> 8 Ott 2023</span>
+                            <button class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                                <i class="fas fa-external-link-alt mr-1"></i> Apri
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Riassunti Card -->
+                <div class="summary-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300" data-type="riassunti" data-subject="matematica">
+                    <div class="relative h-48 bg-gray-100 overflow-hidden flex items-center justify-center">
+                        <i class="fas fa-book text-5xl text-gray-400"></i>
+                        <div class="absolute top-2 right-2 badge-riassunti text-xs px-2 py-1 rounded-md">
+                            <i class="fas fa-bookmark mr-1"></i> Riassunti
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Algebra Lineare</h3>
+                        <p class="text-gray-600 text-sm mb-4">Riassunto completo su spazi vettoriali, matrici e determinanti.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500"><i class="fas fa-calendar-alt mr-1"></i> 5 Ott 2023</span>
+                            <button class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                                <i class="fas fa-external-link-alt mr-1"></i> Apri
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Another Slide Card -->
+                <div class="summary-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300" data-type="slide" data-subject="matematica">
+                    <div class="relative h-48 bg-gray-200 overflow-hidden">
+                        <img src="https://via.placeholder.com/600x400/7719AA/ffffff?text=Slide+Algebra" alt="Slide Algebra" class="w-full h-full object-cover">
+                        <div class="absolute top-2 right-2 badge-slide text-xs px-2 py-1 rounded-md">
+                            <i class="fas fa-images mr-1"></i> Slide
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Algebra Booleana</h3>
+                        <p class="text-gray-600 text-sm mb-4">Slide su algebra booleana e circuiti logici.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500"><i class="fas fa-calendar-alt mr-1"></i> 3 Ott 2023</span>
+                            <button class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                                <i class="fas fa-external-link-alt mr-1"></i> Apri
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Another Appunti Card -->
+                <div class="summary-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300" data-type="appunti" data-subject="matematica">
+                    <div class="relative h-48 bg-gray-100 overflow-hidden flex items-center justify-center">
+                        <i class="fas fa-edit text-5xl text-gray-400"></i>
+                        <div class="absolute top-2 right-2 badge-appunti text-xs px-2 py-1 rounded-md">
+                            <i class="fas fa-pen-fancy mr-1"></i> Appunti
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Geometria Analitica</h3>
+                        <p class="text-gray-600 text-sm mb-4">Appunti su rette, piani e coniche nello spazio.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500"><i class="fas fa-calendar-alt mr-1"></i> 1 Ott 2023</span>
+                            <button class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                                <i class="fas fa-external-link-alt mr-1"></i> Apri
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="mt-8 flex justify-center">
+                <nav class="inline-flex rounded-md shadow">
+                    <a href="#" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="#" class="px-4 py-2 border-t border-b border-gray-300 bg-white text-purple-600 font-medium">1</a>
+                    <a href="#" class="px-4 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">2</a>
+                    <a href="#" class="px-4 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">3</a>
+                    <a href="#" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </nav>
+            </div>
+        </main>
+
+        <!-- Chatbot Section -->
+        <aside id="chatbot" class="hidden lg:block w-full lg:w-80 bg-white rounded-lg shadow-md p-4 h-fit ml-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-700">Assistente OneNote</h2>
+                <button id="closeChatbot" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Chatbot Messages -->
+            <div id="chatbot-messages" class="h-96 overflow-y-auto mb-4 space-y-3">
+                <div class="chatbot-message bot bg-purple-100 text-gray-800 p-3 max-w-xs">
+                    <p>Ciao! Sono qui per aiutarti con le tue note OneNote. Cosa ti serve?</p>
+                </div>
+            </div>
+            
+            <!-- Chatbot Input -->
+            <div class="flex">
+                <input type="text" id="chatbot-input" placeholder="Scrivi un messaggio..." class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-purple-500">
+                <button id="chatbot-send" class="px-4 py-2 onenote-accent text-white rounded-r-md hover:bg-purple-700 focus:outline-none">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="mt-4">
+                <p class="text-xs text-gray-500 mb-2">Azioni rapide:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button class="quick-action px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full hover:bg-gray-200">
+                        Mostra matematica
+                    </button>
+                    <button class="quick-action px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full hover:bg-gray-200">
+                        Ultime slide
+                    </button>
+                    <button class="quick-action px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full hover:bg-gray-200">
+                        Aiuto esercizi
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Mobile Chatbot Button -->
+    <div class="lg:hidden fixed bottom-6 right-6">
+        <button id="openChatbotMobile" class="w-14 h-14 onenote-accent text-white rounded-full shadow-lg flex items-center justify-center focus:outline-none">
+            <i class="fas fa-comment-dots text-2xl"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50">
+        <div class="absolute top-0 right-0 w-64 h-full bg-white shadow-lg">
+            <div class="p-4 flex justify-between items-center border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Menu</h2>
+                <button id="closeMobileMenu" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Sezioni</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <button class="subject-tab w-full text-left px-3 py-2 rounded-md bg-purple-100 text-purple-700 font-medium" data-subject="matematica">
+                            <i class="fas fa-square-root-alt mr-2"></i> Matematica
+                        </button>
+                    </li>
+                    <li>
+                        <button class="subject-tab w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700" data-subject="fisica">
+                            <i class="fas fa-atom mr-2"></i> Fisica
+                        </button>
+                    </li>
+                    <li>
+                        <button class="subject-tab w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700" data-subject="informatica">
+                            <i class="fas fa-laptop-code mr-2"></i> Informatica
+                        </button>
+                    </li>
+                    <li>
+                        <button class="subject-tab w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700" data-subject="chimica">
+                            <i class="fas fa-flask mr-2"></i> Chimica
+                        </button>
+                    </li>
+                </ul>
+                
+                <h3 class="text-lg font-semibold text-gray-700 mt-6 mb-3">Filtri</h3>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="mobile-filter-slide" class="rounded text-purple-600 focus:ring-purple-500" checked>
+                        <label for="mobile-filter-slide" class="ml-2 text-gray-700">Slide</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="mobile-filter-appunti" class="rounded text-green-600 focus:ring-green-500" checked>
+                        <label for="mobile-filter-appunti" class="ml-2 text-gray-700">Appunti</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="mobile-filter-esercizi" class="rounded text-red-600 focus:ring-red-500" checked>
+                        <label for="mobile-filter-esercizi" class="ml-2 text-gray-700">Esercizi</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="mobile-filter-riassunti" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                        <label for="mobile-filter-riassunti" class="ml-2 text-gray-700">Riassunti</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Chatbot -->
+    <div id="mobileChatbot" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50">
+        <div class="absolute bottom-0 left-0 right-0 h-3/4 bg-white rounded-t-2xl shadow-lg">
+            <div class="p-4 flex justify-between items-center border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Assistente OneNote</h2>
+                <button id="closeMobileChatbot" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div id="mobile-chatbot-messages" class="h-3/4 p-4 overflow-y-auto space-y-3">
+                <div class="chatbot-message bot bg-purple-100 text-gray-800 p-3 max-w-xs">
+                    <p>Ciao! Sono qui per aiutarti con le tue note OneNote. Cosa ti serve?</p>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+                <div class="flex">
+                    <input type="text" id="mobile-chatbot-input" placeholder="Scrivi un messaggio..." class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-purple-500">
+                    <button id="mobile-chatbot-send" class="px-4 py-2 onenote-accent text-white rounded-r-md hover:bg-purple-700 focus:outline-none">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenu = document.getElementById('userMenu');
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const subjectTabs = document.querySelectorAll('.subject-tab');
+        const contentTypeTabs = document.querySelectorAll('.content-type-tab');
+        const currentSubject = document.getElementById('current-subject');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const openChatbotMobile = document.getElementById('openChatbotMobile');
+        const closeChatbot = document.getElementById('closeChatbot');
+        const chatbot = document.getElementById('chatbot');
+        const mobileChatbot = document.getElementById('mobileChatbot');
+        const closeMobileChatbot = document.getElementById('closeMobileChatbot');
+        const chatbotMessages = document.getElementById('chatbot-messages');
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotSend = document.getElementById('chatbot-send');
+        const mobileChatbotMessages = document.getElementById('mobile-chatbot-messages');
+        const mobileChatbotInput = document.getElementById('mobile-chatbot-input');
+        const mobileChatbotSend = document.getElementById('mobile-chatbot-send');
+        const quickActions = document.querySelectorAll('.quick-action');
+        const summaryCards = document.querySelectorAll('.summary-card');
+        const filterCheckboxes = [
+            document.getElementById('filter-slide'),
+            document.getElementById('filter-appunti'),
+            document.getElementById('filter-esercizi'),
+            document.getElementById('filter-riassunti')
+        ];
+        const mobileFilterCheckboxes = [
+            document.getElementById('mobile-filter-slide'),
+            document.getElementById('mobile-filter-appunti'),
+            document.getElementById('mobile-filter-esercizi'),
+            document.getElementById('mobile-filter-riassunti')
+        ];
+
+        // Event Listeners
+        userMenuButton.addEventListener('click', toggleUserMenu);
+        mobileMenuButton.addEventListener('click', () => mobileMenu.classList.remove('hidden'));
+        closeMobileMenu.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        openChatbotMobile.addEventListener('click', () => mobileChatbot.classList.remove('hidden'));
+        closeChatbot.addEventListener('click', () => chatbot.classList.add('hidden'));
+        closeMobileChatbot.addEventListener('click', () => mobileChatbot.classList.add('hidden'));
+        chatbotSend.addEventListener('click', sendChatbotMessage);
+        mobileChatbotSend.addEventListener('click', sendMobileChatbotMessage);
+        chatbotInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatbotMessage();
+        });
+        mobileChatbotInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMobileChatbotMessage();
+        });
+
+        // Add event listeners to subject tabs
+        subjectTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab styling
+                subjectTabs.forEach(t => {
+                    t.classList.remove('bg-purple-100', 'text-purple-700', 'font-medium');
+                    t.classList.add('hover:bg-gray-100', 'text-gray-700');
+                });
+                
+                tab.classList.add('bg-purple-100', 'text-purple-700', 'font-medium');
+                tab.classList.remove('hover:bg-gray-100', 'text-gray-700');
+                
+                // Update current subject
+                const subject = tab.getAttribute('data-subject');
+                currentSubject.textContent = getSubjectName(subject);
+                
+                // Filter cards by subject
+                filterCards();
+                
+                // Close mobile menu if open
+                mobileMenu.classList.add('hidden');
+            });
+        });
+
+        // Add event listeners to content type tabs
+        contentTypeTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab styling
+                contentTypeTabs.forEach(t => {
+                    t.classList.remove('text-purple-600', 'border-purple-600');
+                    t.classList.add('text-gray-500', 'hover:text-gray-700');
+                });
+                
+                tab.classList.add('text-purple-600', 'border-purple-600');
+                tab.classList.remove('text-gray-500', 'hover:text-gray-700');
+                
+                // Filter cards by content type
+                filterCards();
+            });
+        });
+
+        // Add event listeners to quick actions
+        quickActions.forEach(action => {
+            action.addEventListener('click', () => {
+                const actionText = action.textContent.trim();
+                addBotMessage(`Hai chiesto: "${actionText}". In un'applicazione reale, questa azione mostrerebbe i contenuti richiesti.`);
+            });
+        });
+
+        // Add event listeners to filter checkboxes
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', filterCards);
+        });
+
+        mobileFilterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                // Sync mobile filters with desktop filters
+                const desktopCheckboxId = checkbox.id.replace('mobile-', '');
+                const desktopCheckbox = document.getElementById(desktopCheckboxId);
+                desktopCheckbox.checked = checkbox.checked;
+                
+                filterCards();
+            });
+        });
+
+        // Functions
+        function toggleUserMenu() {
+            userMenu.classList.toggle('hidden');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const icon = darkModeToggle.querySelector('i');
+            
+            if (document.documentElement.classList.contains('dark')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+
+        function getSubjectName(subjectKey) {
+            const subjects = {
+                'matematica': 'Matematica',
+                'fisica': 'Fisica',
+                'informatica': 'Informatica',
+                'chimica': 'Chimica'
+            };
+            return subjects[subjectKey] || subjectKey;
+        }
+
+        function sendChatbotMessage() {
+            const message = chatbotInput.value.trim();
+            if (message) {
+                addUserMessage(message, chatbotMessages);
+                chatbotInput.value = '';
+                
+                // Simulate bot response
+                setTimeout(() => {
+                    addBotMessage("Grazie per il tuo messaggio! In un'applicazione reale, questa sarebbe una risposta intelligente basata sul tuo input.");
+                }, 1000);
+            }
+        }
+
+        function sendMobileChatbotMessage() {
+            const message = mobileChatbotInput.value.trim();
+            if (message) {
+                addUserMessage(message, mobileChatbotMessages);
+                mobileChatbotInput.value = '';
+                
+                // Simulate bot response
+                setTimeout(() => {
+                    addBotMessage("Grazie per il tuo messaggio! In un'applicazione reale, questa sarebbe una risposta intelligente basata sul tuo input.", mobileChatbotMessages);
+                }, 1000);
+            }
+        }
+
+        function addUserMessage(message, container = chatbotMessages) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'chatbot-message user bg-purple-600 text-white p-3 ml-auto max-w-xs';
+            messageElement.innerHTML = `<p>${message}</p>`;
+            container.appendChild(messageElement);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addBotMessage(message, container = chatbotMessages) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'chatbot-message bot bg-purple-100 text-gray-800 p-3 max-w-xs';
+            messageElement.innerHTML = `<p>${message}</p>`;
+            container.appendChild(messageElement);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function filterCards() {
+            // Get active subject
+            const activeSubjectTab = document.querySelector('.subject-tab.bg-purple-100');
+            const activeSubject = activeSubjectTab ? activeSubjectTab.getAttribute('data-subject') : 'matematica';
+            
+            // Get active content type
+            const activeContentTypeTab = document.querySelector('.content-type-tab.text-purple-600');
+            const activeContentType = activeContentTypeTab ? activeContentTypeTab.getAttribute('data-type') : 'all';
+            
+            // Get checked filters
+            const showSlide = filterCheckboxes[0].checked;
+            const showAppunti = filterCheckboxes[1].checked;
+            const showEsercizi = filterCheckboxes[2].checked;
+            const showRiassunti = filterCheckboxes[3].checked;
+            
+            summaryCards.forEach(card => {
+                const cardSubject = card.getAttribute('data-subject');
+                const cardType = card.getAttribute('data-type');
+                
+                // Check if card matches subject filter
+                const subjectMatch = cardSubject === activeSubject;
+                
+                // Check if card matches content type filter
+                let typeMatch = false;
+                if (activeContentType === 'all') {
+                    typeMatch = (cardType === 'slide' && showSlide) || 
+                                (cardType === 'appunti' && showAppunti) || 
+                                (cardType === 'esercizi' && showEsercizi) ||
+                                (cardType === 'riassunti' && showRiassunti);
+                } else {
+                    typeMatch = cardType === activeContentType;
+                }
+                
+                // Show or hide card based on filters
+                if (subjectMatch && typeMatch) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        // Check for saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.documentElement.classList.add('dark');
+            const icon = darkModeToggle.querySelector('i');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        }
+
+        // Initialize
+        filterCards();
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=pallebluenormi/onenote-ai-def" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
